@@ -1,3 +1,4 @@
+#importing libraries
 import smtplib
 import ssl
 import pandas as pd
@@ -10,26 +11,26 @@ from email.mime.image import MIMEImage
 import os
 
 subject = 'hi demo test'
-sender_email = "rs3167196@gmail.com"
-password = 'Rajeev@064'
+sender_email = "email_id@gmail.com" #your email id
+password = 'password' #your password
 
 #by using excel
-x1 = pd.ExcelFile('list2.xlsx')
+x1 = pd.ExcelFile('list2.xlsx') #having data of names and email id of students
 df = x1.parse('Sheet1')
 files = ['certi.pdf', 'certi.png']
 
 
 #by using csv
-df = pd.read_csv("list2.csv")
+df = pd.read_csv("list2.csv")   #having data of names and email id of students
 
-
+#extracting data from csv file
 for index, row in df.iterrows():
     message = MIMEMultipart()
     message["From"] = sender_email
     message["Subject"] = subject
     print(index, row['Name'], row['email'])
     body ='Dear '+row['Name'] + '\nCongratulations, your certificate is ready.'
-
+    #html part 
     html = """\
         <html>
         <head>
@@ -53,7 +54,8 @@ for index, row in df.iterrows():
         </body>
         </html>
         """ % row['Name']
-
+    
+    #header of email
     receiver_email = row['email']
     print(receiver_email)
     message["To"] = receiver_email
@@ -66,15 +68,8 @@ for index, row in df.iterrows():
     img.add_header('Content-Id', '<myimage>')
     img.add_header("Content-Disposition", "inline", filename="{}.png".format(row['Name']))
     message.attach(img)
-    '''
-    for filename in files:
-        with open(filename, "rb") as attachment:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition",f"attachment; filename= {filename}",)
-        message.attach(part)
-    '''
+    
+    #sending png file
     with open("{}.png".format(row['Name']), "rb") as attachment:
         part = MIMEBase("application", "octet-stream")
         part.set_payload(attachment.read())
@@ -83,7 +78,8 @@ for index, row in df.iterrows():
     message.attach(part)
     text = message.as_string()
     context = ssl.create_default_context()
-
+    
+    #sending pdf file                
     with open("{}.pdf".format(row['Name']), "rb") as attachment:
         part = MIMEBase("application", "octet-stream")
         part.set_payload(attachment.read())
@@ -93,11 +89,12 @@ for index, row in df.iterrows():
     text = message.as_string()
     context = ssl.create_default_context()
 
-
+    #connecting to server
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
         print('email send to ', receiver_email)
+    #exiting                 
     del message
     os.remove("{}.png".format(row['Name']))
     os.remove("{}.pdf".format(row['Name']))
